@@ -10,3 +10,4 @@ flake8
 black
 pytest
 httpx
+langchain-groq
