@@ -1,13 +1,19 @@
+import os
 import re
 
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 
 from app.github_client import commit_file, get_pr_files
 from app.tools import run_linter_tool
 
 
 def _call_llm(prompt: str) -> str:  # isolated so tests can patch it
-    return ChatOpenAI(model="gpt-4o-mini", temperature=0).invoke(prompt).content
+    llm = ChatGroq(
+        model="llama-3.3-70b-versatile",
+        temperature=0,
+        api_key=os.getenv("GROQ_API_KEY"),
+    )
+    return llm.invoke(prompt).content
 
 
 def _strip_fences(text: str) -> str:
@@ -43,6 +49,24 @@ def propose_refactor_node(state):
 
 
 def apply_changes_node(state):
-    shas = [commit_file(state["pr_url"], n, c, f"refactor: automated fixes for {n}")
-            for n, c in state["refactored_code"].items()]
-    return {"history": [f"committed {len(shas)} file(s): {', '.join(s[:7] for s in shas)}"]}
+    if not state.get("is_approved"):
+        return {
+            "history": ["commit blocked: reviewer approval required"]
+        }
+
+    shas = [
+        commit_file(
+            state["pr_url"],
+            name,
+            code,
+            f"refactor: automated fixes for {name}"
+        )
+        for name, code in state["refactored_code"].items()
+    ]
+
+    return {
+        "history": [
+            f"committed {len(shas)} file(s): "
+            f"{', '.join(sha[:7] for sha in shas)}"
+        ]
+    }

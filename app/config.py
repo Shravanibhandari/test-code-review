@@ -3,5 +3,5 @@ from dotenv import load_dotenv
 
 load_dotenv()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 CHECKPOINT_DB = os.getenv("CHECKPOINT_DB", "checkpoints.db")
